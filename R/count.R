@@ -1,0 +1,448 @@
+#' Create One-Way Table
+#'
+#' \code{create_table} summarizes a given variable in a one-way table with
+#' percentages. It is mostly a wrapper around \code{\link[janitor]{tabyl}} that
+#' allows more flexibility in ordering the output table.
+#'
+#' By default, \code{create_table} will order factor inputs by their level and
+#' all other input by frequency. If \code{infreq == TRUE}; if
+#' \code{infreq == FALSE}, it will order alpha-numerically. Note that the
+#' \code{.by} variable will be converted to a factor with levels ordered by the
+#' output table, regardless of input type or ordering.
+#'
+#' @param .data A dataframe or tibble in tidy format
+#'
+#' @param .by The variable in \code{.data} to analyze; can be specified as a
+#'   normal variable or as a string
+#'
+#' @param infreq Should the output be ordered by frequency? The default depends
+#'   on the input type; see details.
+#'
+#' @param show_missing_levels Should all levels be shown, even if empty?
+#'
+#' @return A \code{\link[tibble]{tibble}} holding the summary table
+create_table <- function(
+  .data,
+  .by,
+  infreq = NULL,
+  to_NA = c("unknown", "missing", "NA", "N/A", ""),
+  show_missing_levels = FALSE
+) {
+
+  # Make sure `.by` is a symbol
+  .by <- rlang::ensym(.by)
+
+  # By default, `infreq` should be FALSE if `.by` is a factor and TRUE otherwise
+  if (rlang::is_empty(infreq)) {
+    infreq <- .data %>% dplyr::pull({{ .by }}) %>% purrr::negate(is.factor)()
+  }
+
+  # Replace empty string in `to_NA` with "<NA>", b/c this is how it appears in
+  # the coerced factor
+
+  to_NA <- stringr::str_replace_all(to_NA, pattern = "^$", replacement = "<NA>")
+
+  # Create one-way table of `.by` variable
+  .data %>%
+    # Coerce `.by` to an appropriately ordered factor
+    dplyr::mutate(
+      {{ .by }} := purrr::when(
+        {{ .by }},
+        # If `infreq` == TRUE, order by frequency of levels
+        infreq ~ factor(.) %>% forcats::fct_infreq(ordered = TRUE),
+        # Else if `.by` is already a factor, keep its ordering but ensure
+        # `ordered` is true
+        is.factor(.) ~ as.ordered(.),
+        # Else coerce to factor with alphanumeric ordering
+        ~ factor(.)
+      )
+    ) %>%
+    dplyr::mutate(
+      {{ .by }} := forcats::fct_relabel(
+        {{ .by }},
+        ~ gsub(
+          pattern = stringr::str_flatten(to_NA, collapse = "|"),
+          replacement = NA,
+          x = .x,
+          ignore.case = TRUE
+        )
+      ) %>%
+        droplevels()
+    ) %>%
+    janitor::tabyl({{ .by }}) %>%
+    dplyr::as_tibble() %>%
+    dplyr::arrange({{ .by }}) %>%
+    # Change `NA` to "Missing"
+    dplyr::mutate(
+      {{ .by }} := forcats::fct_explicit_na({{ .by }}, na_level = "Missing")
+    )
+}
+
+#' Create a One-Way Table from Multiple Variables
+#'
+#' \code{pivot_table} works similarly to \code{link{create_table}}, but is
+#' designed to "pivot" the input into long format before summarizing. This is
+#' most useful when you'd like to treat multiple variables as a single variable
+#' in the summary table.
+#'
+#'
+pivot_table <- function(
+  .data,
+  ...,
+  to = NULL,
+  infreq = NULL,
+  show_missing_levels = FALSE
+) {
+
+  # Selecting variables of interest is needed for multiple steps; go ahead and
+  # do it
+  .data %>%
+    dplyr::select(...) ->
+  selected_data
+
+  # If `to` is not specified, use the longest common substring of the selected
+  # column names. If there is none, use "value".
+  if (rlang::is_empty(to)) {
+    prefix <- selected_data %>%
+      colnames() %>%
+      hutils::longest_prefix(warn_if_no_prefix = FALSE) %>%
+      stringr::str_remove_all(pattern = "[^a-zA-Z0-9]*$") %>%
+      janitor::make_clean_names()
+    to <- if (prefix == "") "value" else prefix
+  }
+
+  # Convert `to` to an expression; this allows flexibility in evaluation and
+  # coercion of `to`
+  to <- rlang::expr(!!rlang::ensym(to))
+
+  # Pivot values and create table
+  selected_data %>%
+    tidyr::pivot_longer(
+      dplyr::everything(),
+      values_to = rlang::expr_name(to)
+    ) %>%
+    create_table(
+      !!to,
+      infreq = infreq,
+      show_missing_levels = show_missing_levels
+    )
+}
+
+#' Create Pie Chart from Table
+#'
+#' \code{create_pie} takes output from one of the \code{covidCluster::*_table}
+#' functions and produces a pie chart.
+#'
+#' @param .table The output of \code{\link{create_table}} or
+#'   \code{\link{pivot_table}}, which is a one-way \code{\link[janitor]{tabyl}}
+#'   encoded to assist visualization
+#'
+#' @param .by The variable to chart; defaults to the first column of
+#'   \code{.table}
+#'
+#' @param incl_missing Should the chart include missing values as a category?
+#'
+#' @param title The title of the chart; defaults to a title-case version of the
+#'   variable name
+#'
+#' @param legend_title The title of the chart legend; defaults to the chart
+#'   title
+#'
+#' @param palette The color palette to use; this is a material design color
+#'   palette generated by \code{\link[ggthemes]{pal_material}}; see that
+#'   function for details and available choices
+#'
+#' @param bottom_legend Should the legend be positioned at the bottom or on the
+#'   right side?
+#'
+#' @param background What should the background color be? Defaults to a light gray.
+#'
+#' @param dodge Change the position of the labels along the radius of the
+#'   circle; useful for separating overlapping labels. A value of \code{0}
+#'   leaves the labels at the mid-point of the pie chart radius; a value of
+#'   \code{1} spaces them evenly across the radius. Values in-between \code{0}
+#'   and \code{1} spread the labels out across that fraction of the radius
+#'   (centered on the midpoint).
+create_pie <- function(
+  .table,
+  .by = NULL,
+  incl_missing = FALSE,
+  title = NULL,
+  legend_title = title,
+  palette = "blue",
+  legend_bottom = TRUE,
+  background = "gray93",
+  dodge = 0
+) {
+
+  # Make sure `.by` is a symbol; defaults to the summarized variable
+  if (rlang::is_empty(.by)) {
+    .by <- .table %>%
+      colnames() %>%
+      .[[1]] %>%
+      rlang::sym()
+  } else {
+    .by <- rlang::ensym(.by)
+  }
+
+  # Remove missing data, if desired
+  if (rlang::is_false(incl_missing)) {
+    .table %>%
+      dplyr::filter(!!.by != "Missing") ->
+    .table
+  }
+
+  # Create color palette
+  pal <- ggsci::pal_material(
+    palette = palette,
+    n = NROW(.table) + 1,
+    reverse = TRUE
+  )
+
+  # Set title to title-case `.by` if NULL
+  if (rlang::is_empty(title)) {
+    title <- rlang::as_name(.by) %>% janitor::make_clean_names(case = "title")
+  }
+
+  # Calculate percentages
+  .table %>%
+    dplyr::mutate(pct = n / sum(n, na.rm = TRUE)) ->
+  .table
+
+  # Create plot
+  plt <- ggplot2::ggplot(
+    .table,
+    ggplot2::aes(x = 1, y = pct, fill = !!.by)
+  ) +
+    ggplot2::geom_col(width = 1, position = "fill") +
+    ggtext::geom_richtext(
+      ggplot2::aes(
+        y = cumsum(rev(pct)) - 0.5*rev(pct),
+        label = paste0(
+          "**", rev(n), "** ",
+          "(", round(100*rev(pct)), "%)"
+        ),
+        color = rev(!!.by),
+      ),
+      size = 5,
+      fill = background,
+      position = ggplot2::position_dodge2(width = dodge),
+      show.legend = FALSE
+    ) +
+    ggplot2::coord_polar("y", start = 0, direction = -1) +
+    ggplot2::scale_color_manual(
+      name = legend_title,
+      values = pal(NROW(.table)),
+      aesthetics = c("color", "fill")
+    ) +
+    ggplot2::ggtitle(title) +
+    ggthemes::theme_fivethirtyeight() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        size = 28,
+        face = "bold",
+        hjust = 0.5,
+        color = "gray30"
+      ),
+      legend.title = ggplot2::element_text(
+        size = 18,
+        face = "bold",
+        color = "grey30"
+      ),
+      legend.text = ggplot2::element_text(
+        size = 14,
+        color = "gray30"
+      ),
+      legend.background = element_rect(color = NA, fill = background),
+      legend.box.background = element_rect(color = NA, fill = background),
+      legend.key = element_rect(color = NA, fill = background),
+      panel.background = ggplot2::element_rect(color = NA, fill = background),
+      panel.border = ggplot2::element_blank(),
+      panel.grid.major = element_blank(),
+      plot.background = ggplot2::element_rect(color = NA, fill = background),
+      line = ggplot2::element_blank(),
+      axis.text = ggplot2::element_blank()
+    )
+
+  if (rlang::is_false(legend_bottom)) {
+    plt <- plt + ggplot2::theme(
+      legend.position = "right",
+      legend.direction = "vertical"
+    )
+  }
+
+  attr(plt, which = "background") <- background
+
+  plt
+}
+
+#' Create Bar Chart from Table
+#'
+#' \code{create_bar} takes output from one of the \code{covidCluster::*_table}
+#' functions and produces a bar chart.
+#'
+#' @param .table The output of \code{\link{create_table}} or
+#'   \code{\link{pivot_table}}, which is a one-way \code{\link[janitor]{tabyl}}
+#'   encoded to assist visualization
+#'
+#' @param .by The variable to chart; defaults to the first column of
+#'   \code{.table}
+#'
+#' @param incl_missing Should the chart include missing values as a category?
+#'
+#' @param title The title of the chart; defaults to a title-case version of the
+#'   variable name
+#'
+#' @param legend_title The title of the chart legend; defaults to the chart
+#'   title
+#'
+#' @param palette The color palette to use; this is a material design color
+#'   palette generated by \code{\link[ggthemes]{pal_material}}; see that
+#'   function for details and available choices
+#'
+#' @param bottom_legend Should the legend be positioned at the bottom or on the
+#'   right side?
+#'
+#' @param background What should the background color be? Defaults to a light gray.
+create_bar <- function(
+  .table,
+  .by = NULL,
+  incl_missing = FALSE,
+  title = NULL,
+  x_lab = NULL,
+  y_lab = NULL,
+  legend  = FALSE,
+  legend_title = title,
+  legend_bottom = TRUE,
+  palette = "blue",
+  background = "gray93"
+) {
+
+  # Make sure `.by` is a symbol; defaults to the summarized variable
+  if (rlang::is_empty(.by)) {
+    .by <- .table %>%
+      colnames() %>%
+      .[[1]] %>%
+      rlang::sym()
+  } else {
+    .by <- rlang::ensym(.by)
+  }
+
+  # Remove missing data, if desired
+  if (rlang::is_false(incl_missing)) {
+    .table %>%
+      dplyr::filter(!!.by != "Missing") ->
+      .table
+  }
+
+  # Create color palette
+  pal <- ggsci::pal_material(
+    palette = palette,
+    n = NROW(.table) + 1,
+    reverse = TRUE
+  )
+
+  # Set title to title-case `.by` if NULL
+  if (rlang::is_empty(title)) {
+    title <- rlang::as_name(.by) %>% janitor::make_clean_names(case = "title")
+  }
+
+  # Calculate percentages
+  .table %>%
+    dplyr::mutate(pct = n / sum(n, na.rm = TRUE)) ->
+    .table
+
+  # Create plot
+  plt <- ggplot2::ggplot(
+    .table,
+    ggplot2::aes(x = !!.by, y = n, fill = !!.by)
+  ) +
+    ggplot2::geom_col(show.legend = legend) +
+    ggtext::geom_textbox(
+      ggplot2::aes(
+        y = n,
+        label = paste0(
+          "**", n, "** ",
+          "(", round(100*pct), "%)"
+        ),
+        color = !!.by,
+      ),
+      width = 0.9/15,
+      vjust = 0,
+      halign = 0.5,
+      size = 14 * 0.35278,
+      fill = background,
+      show.legend = FALSE
+    ) +
+    ggplot2::scale_color_manual(
+      name = legend_title,
+      values = pal(NROW(.table)),
+      aesthetics = c("color", "fill")
+    ) +
+    ggplot2::coord_cartesian(ylim = c(0, 1.1*max(.table[["n"]]))) +
+    ggplot2::ggtitle(title) +
+    ggplot2::xlab(x_lab) +
+    ggplot2::ylab(y_lab) +
+    ggthemes::theme_fivethirtyeight(base_size = 14) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        size = 28,
+        face = "bold",
+        hjust = 0.5,
+        color = "gray30"
+      ),
+      legend.title = ggplot2::element_text(
+        size = 18,
+        face = "bold",
+        color = "grey30"
+      ),
+      legend.text = ggplot2::element_text(
+        size = 14,
+        color = "gray30"
+      ),
+      legend.background = element_rect(color = NA, fill = background),
+      legend.box.background = element_rect(color = NA, fill = background),
+      legend.key = element_rect(color = NA, fill = background),
+      panel.background = ggplot2::element_rect(color = NA, fill = background),
+      panel.border = ggplot2::element_blank(),
+      panel.grid.major.x = ggplot2::element_blank(),
+      plot.background = ggplot2::element_rect(color = NA, fill = background),
+      line = ggplot2::element_blank(),
+      axis.text = ggplot2::element_text(size = 16),
+      axis.title.x = purrr::when(
+        rlang::is_empty(x_lab) ~ ggplot2::element_blank(),
+        ~ ggplot2::element_text(size = 18)
+      ),
+      axis.title.y = purrr::when(
+        rlang::is_empty(y_lab) ~ ggplot2::element_blank(),
+        ~ ggplot2::element_text(size = 18)
+      ),
+    )
+
+  if (rlang::is_false(legend_bottom)) {
+    plt <- plt + ggplot2::theme(
+      legend.position = "right",
+      legend.direction = "vertical"
+    )
+  }
+
+  attr(plt, which = "background") <- background
+
+  plt
+}
+
+fct_cut <- function(.f, breaks, incl_lower = TRUE, ordered = FALSE) {
+  .f %>%
+    as.character() %>%
+    as.numeric() %>%
+    cut(breaks = breaks, right = incl_lower, ordered_result = ordered) %>%
+    forcats::fct_relabel(
+      ~ .x %>%
+        stringr::str_remove_all(stringr::coll("[")) %>%
+        stringr::str_remove_all(stringr::coll("]")) %>%
+        stringr::str_remove_all("[()]") %>%
+        stringr::str_replace_all(pattern = "-Inf,", replacement = "<") %>%
+        stringr::str_replace_all(pattern = ",Inf", replacement = "+") %>%
+        stringr::str_replace_all(pattern = ",", replacement = "-")
+    )
+}

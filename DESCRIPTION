@@ -1,0 +1,19 @@
+Package: covidCluster
+Title: Automated Cluster Detection in Shelby County Health Department Data
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Jesse",
+           family = "Smith",
+           role = c("aut", "cre"),
+           email = "jesse.smith@shelbycountytn.gov",
+           comment = c(ORCID = "0000-0001-7375-2463"))
+Description: covidCluster is designed to detect clusters of COVID-19 cases
+  across space and time. It does so by analyzing data on the whereabouts of
+  interviewed cases and identifying links between those cases.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: 
+    testthat
