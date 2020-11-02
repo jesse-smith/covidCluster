@@ -24,9 +24,9 @@ Imports:
     janitor (>= 2.0.1),
     magrittr (>= 1.5),
     rlang (>= 0.4.8),
-    stringr (>= 1.4.0)
+    stringr (>= 1.4.0),
+    coviData (>= 0.0.0.9001)
 Suggests: 
-    coviData (>= 0.0.0.9001),
     testthat
 Encoding: UTF-8
 LazyData: true
