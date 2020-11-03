@@ -47,9 +47,10 @@
 
 
 <meta property="og:title" content="Create a One-Way Table from Multiple Variables — create_table" />
-<meta property="og:description" content="create_table isdesigned to &quot;pivot&quot; the input into long format before summarizing. This is
-most useful when you'd like to treat multiple variables as a single variable
-in the summary table." />
+<meta property="og:description" content="create_table summarizes a given variable in a one-way table with
+percentages. It is mostly a wrapper around tabyl that
+allows more flexibility in ordering the output table. It is designed to
+handle multiple variables at once using tidyselect helpers." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -119,9 +120,10 @@ in the summary table." />
     </div>
 
     <div class="ref-description">
-    <p><code>create_table</code> isdesigned to "pivot" the input into long format before summarizing. This is
-most useful when you'd like to treat multiple variables as a single variable
-in the summary table.</p>
+    <p><code>create_table</code> summarizes a given variable in a one-way table with
+percentages. It is mostly a wrapper around <code><a href='https://rdrr.io/pkg/janitor/man/tabyl.html'>tabyl</a></code> that
+allows more flexibility in ordering the output table. It is designed to
+handle multiple variables at once using tidyselect helpers.</p>
     </div>
 
     <pre class="usage"><span class='fu'>create_table</span><span class='op'>(</span>
@@ -172,11 +174,7 @@ on the input type; see details.</p></td>
     <p>A <code><a href='https://rdrr.io/pkg/janitor/man/tabyl.html'>tabyl</a></code> in <code><a href='https://tibble.tidyverse.org/reference/tibble.html'>tibble</a></code> format</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p><code>create_table</code> summarizes a given variable in a one-way table with
-percentages. It is mostly a wrapper around <code><a href='https://rdrr.io/pkg/janitor/man/tabyl.html'>tabyl</a></code> that
-allows more flexibility in ordering the output table. It is designed to
-handle multiple variables at once using tidyselect helpers.</p>
-<p>By default, <code>create_table</code> will order factor inputs by their level and
+    <p>By default, <code>create_table</code> will order factor inputs by their level and
 all other input by frequency. If <code>infreq == TRUE</code>; if
 <code>infreq == FALSE</code>, it will order alpha-numerically. Note that the
 <code>.by</code> variable will be converted to a factor with levels ordered by the
