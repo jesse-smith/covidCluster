@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create One-Way Table — construct_table • covidCluster</title>
+<title>Automated Cluster Detection in Shelby County Health Department Data — covidCluster-package • covidCluster</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,10 +46,12 @@
 
 
 
-<meta property="og:title" content="Create One-Way Table — construct_table" />
-<meta property="og:description" content="construct_table summarizes a given variable in a one-way table with
-percentages. It is mostly a wrapper around tabyl that
-allows more flexibility in ordering the output table." />
+<meta property="og:title" content="Automated Cluster Detection in Shelby County Health Department Data — covidCluster-package" />
+<meta property="og:description" content="
+covidCluster is designed to detect clusters of
+    COVID-19 cases across space and time. It does so by analyzing data on
+    the whereabouts of interviewed cases and identifying links between
+    those cases." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -113,62 +115,24 @@ allows more flexibility in ordering the output table." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create One-Way Table</h1>
+    <h1>Automated Cluster Detection in Shelby County Health Department Data</h1>
     
-    <div class="hidden name"><code>construct_table.Rd</code></div>
+    <div class="hidden name"><code>covidCluster-package.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p><code>construct_table</code> summarizes a given variable in a one-way table with
-percentages. It is mostly a wrapper around <code><a href='https://rdrr.io/pkg/janitor/man/tabyl.html'>tabyl</a></code> that
-allows more flexibility in ordering the output table.</p>
+    <p><img src='figures/logo.png' align='right' alt='logo' width='120' /></p>
+<p>covidCluster is designed to detect clusters of
+    COVID-19 cases across space and time. It does so by analyzing data on
+    the whereabouts of interviewed cases and identifying links between
+    those cases.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>construct_table</span><span class='op'>(</span>
-  <span class='va'>.data</span>,
-  <span class='va'>.by</span>,
-  infreq <span class='op'>=</span> <span class='cn'>NULL</span>,
-  to_NA <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"unknown"</span>, <span class='st'>"missing"</span>, <span class='st'>"NA"</span>, <span class='st'>"N/A"</span>, <span class='st'>""</span><span class='op'>)</span>,
-  show_missing_levels <span class='op'>=</span> <span class='cn'>FALSE</span>
-<span class='op'>)</span></pre>
 
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>.data</th>
-      <td><p>A dataframe or tibble in tidy format</p></td>
-    </tr>
-    <tr>
-      <th>.by</th>
-      <td><p>The variable in <code>.data</code> to analyze; can be specified as a
-normal variable or as a string</p></td>
-    </tr>
-    <tr>
-      <th>infreq</th>
-      <td><p>Should the output be ordered by frequency? The default depends
-on the input type; see details.</p></td>
-    </tr>
-    <tr>
-      <th>to_NA</th>
-      <td><p>A character vector of values that should be considered missing</p></td>
-    </tr>
-    <tr>
-      <th>show_missing_levels</th>
-      <td><p>Should all levels be shown, even if empty?</p></td>
-    </tr>
-    </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
-    <p>A <code><a href='https://tibble.tidyverse.org/reference/tibble.html'>tibble</a></code> holding the summary table</p>
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>By default, <code>construct_table</code> will order factor inputs by their level
-and all other input by frequency. If <code>infreq == TRUE</code>; if
-<code>infreq == FALSE</code>, it will order alpha-numerically. Note that the
-<code>.by</code> variable will be converted to a factor with levels ordered by the
-output table, regardless of input type or ordering.</p>
+    <p><strong>Maintainer</strong>: Jesse Smith <a href='mailto:jesse.smith@shelbycountytn.gov'>jesse.smith@shelbycountytn.gov</a> (<a href='https://orcid.org/0000-0001-7375-2463'>ORCID</a>)</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
