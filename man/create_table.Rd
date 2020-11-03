@@ -4,11 +4,50 @@
 \alias{create_table}
 \title{Create a One-Way Table from Multiple Variables}
 \usage{
-create_table(.data, ..., to = NULL, infreq = NULL, show_missing_levels = FALSE)
+create_table(
+  .data,
+  ...,
+  to = NULL,
+  infreq = NULL,
+  to_NA = c("unknown", "missing", "NA", "N/A", ""),
+  show_missing_levels = FALSE
+)
+}
+\arguments{
+\item{.data}{A dataframe or tibble in tidy format}
+
+\item{...}{The variable(s) in \code{.data} to analyze; can be specified as
+normal variables, strings, or using tidyselect helpers (such as
+\code{\link[tidyselect]{starts_with}})}
+
+\item{to}{The name of the variable to "pivot" to; this defaults to the
+longest common starting string in the input variable names, or "value" if
+none exists}
+
+\item{infreq}{Should the output be ordered by frequency? The default depends
+on the input type; see details.}
+
+\item{to_NA}{A character vector of values that should be considered missing}
+
+\item{show_missing_levels}{Should all levels be shown, even if empty?}
+}
+\value{
+A \code{\link[janitor]{tabyl}} in \code{\link[tibble]{tibble}} format
 }
 \description{
-\code{pivot_table} works similarly to \code{link{create_table}}, but is
-designed to "pivot" the input into long format before summarizing. This is
+\code{create_table} isdesigned to "pivot" the input into long format before summarizing. This is
 most useful when you'd like to treat multiple variables as a single variable
 in the summary table.
+}
+\details{
+\code{create_table} summarizes a given variable in a one-way table with
+percentages. It is mostly a wrapper around \code{\link[janitor]{tabyl}} that
+allows more flexibility in ordering the output table. It is designed to
+handle multiple variables at once using tidyselect helpers.
+
+By default, \code{create_table} will order factor inputs by their level and
+all other input by frequency. If \code{infreq == TRUE}; if
+\code{infreq == FALSE}, it will order alpha-numerically. Note that the
+\code{.by} variable will be converted to a factor with levels ordered by the
+output table, regardless of input type or ordering.
 }

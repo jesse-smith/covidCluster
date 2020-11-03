@@ -1,10 +1,9 @@
 #' Magrittr Pipe Helpers
 #'
-#' The magrittr pipe (\code{\link[magrittr]{`%>%`}}) is a common programming
-#' tool in \strong{R} that often makes code much easier to read. In addition to
-#' the primary pipe operator, magrittr offers several additional pipes, as well
-#' as functions to help perform common infix-operations in a pipe-friendly
-#' manner.
+#' The magrittr pipe is a common programming tool in \strong{R} that often makes
+#' code much easier to read. In addition to the primary pipe operator, magrittr
+#' offers several additional pipes, as well as functions to help perform common
+#' infix-operations in a pipe-friendly manner.
 #'
 #' @md
 #' @name magrittr_utils

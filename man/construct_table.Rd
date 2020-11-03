@@ -21,6 +21,8 @@ normal variable or as a string}
 \item{infreq}{Should the output be ordered by frequency? The default depends
 on the input type; see details.}
 
+\item{to_NA}{A character vector of values that should be considered missing}
+
 \item{show_missing_levels}{Should all levels be shown, even if empty?}
 }
 \value{
