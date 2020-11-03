@@ -86,10 +86,6 @@ construct_table <- function(
 
 #' Create a One-Way Table from Multiple Variables
 #'
-#' \code{create_table} isdesigned to "pivot" the input into long format before summarizing. This is
-#' most useful when you'd like to treat multiple variables as a single variable
-#' in the summary table.
-#'
 #' \code{create_table} summarizes a given variable in a one-way table with
 #' percentages. It is mostly a wrapper around \code{\link[janitor]{tabyl}} that
 #' allows more flexibility in ordering the output table. It is designed to

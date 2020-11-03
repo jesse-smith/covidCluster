@@ -137,7 +137,7 @@ plot_pie <- function(
       axis.text = ggplot2::element_blank()
     )
 
-  if (rlang::is_false(legend_bottom)) {
+  if (rlang::is_false(bottom_legend)) {
     plt <- plt + ggplot2::theme(
       legend.position = "right",
       legend.direction = "vertical"
@@ -304,7 +304,7 @@ plot_bar <- function(
       ),
     )
 
-  if (rlang::is_false(legend_bottom)) {
+  if (rlang::is_false(bottom_legend)) {
     plt <- plt + ggplot2::theme(
       legend.position = "right",
       legend.direction = "vertical"

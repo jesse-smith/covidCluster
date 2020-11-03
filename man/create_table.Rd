@@ -35,16 +35,12 @@ on the input type; see details.}
 A \code{\link[janitor]{tabyl}} in \code{\link[tibble]{tibble}} format
 }
 \description{
-\code{create_table} isdesigned to "pivot" the input into long format before summarizing. This is
-most useful when you'd like to treat multiple variables as a single variable
-in the summary table.
-}
-\details{
 \code{create_table} summarizes a given variable in a one-way table with
 percentages. It is mostly a wrapper around \code{\link[janitor]{tabyl}} that
 allows more flexibility in ordering the output table. It is designed to
 handle multiple variables at once using tidyselect helpers.
-
+}
+\details{
 By default, \code{create_table} will order factor inputs by their level and
 all other input by frequency. If \code{infreq == TRUE}; if
 \code{infreq == FALSE}, it will order alpha-numerically. Note that the

@@ -6,8 +6,8 @@
 \usage{
 load_integrated_data(
   date = Sys.Date(),
- 
-    directory = "V:/EPI DATA ANALYTICS TEAM/COVID SANDBOX REDCAP DATA/Integrated data tool Case Interviews/",
+  directory = paste0("V:/EPI DATA ANALYTICS TEAM/COVID SANDBOX REDCAP DATA/",
+    "Integrated data tool Case Interviews/"),
   ext = "csv"
 )
 }
