@@ -27,6 +27,7 @@ Imports:
     rlang (>= 0.4.8),
     stringr (>= 1.4.0)
 Suggests: 
+    covr,
     testthat
 Remotes:
     jesse-smith/coviData
