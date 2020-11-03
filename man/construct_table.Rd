@@ -29,14 +29,15 @@ on the input type; see details.}
 A \code{\link[tibble]{tibble}} holding the summary table
 }
 \description{
-\code{create_table} summarizes a given variable in a one-way table with
+\code{construct_table} summarizes a given variable in a one-way table with
 percentages. It is mostly a wrapper around \code{\link[janitor]{tabyl}} that
 allows more flexibility in ordering the output table.
 }
 \details{
-By default, \code{create_table} will order factor inputs by their level and
-all other input by frequency. If \code{infreq == TRUE}; if
+By default, \code{construct_table} will order factor inputs by their level
+and all other input by frequency. If \code{infreq == TRUE}; if
 \code{infreq == FALSE}, it will order alpha-numerically. Note that the
 \code{.by} variable will be converted to a factor with levels ordered by the
 output table, regardless of input type or ordering.
 }
+\keyword{internal}

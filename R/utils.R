@@ -41,14 +41,14 @@ fct_cut <- function(
   open_upper <- tryCatch(open[[2]], error = function(err) open[[1]])
 
   # How should the lower endpoint be treated?
-  if (open_lower & (min(breaks) <= min(.x))) {
+  if (open_lower & (min(breaks, na.rm = TRUE) <= min(.x, na.rm = TRUE))) {
     breaks[breaks == min(.x)] <- -Inf
   } else if (open_lower) {
     breaks %<>% append(values = -Inf, after = 0L)
   }
 
   # How should the upper endpoint be treated?
-  if (open_upper & max(breaks) >= max(.x)) {
+  if (open_upper & max(breaks, na.rm = TRUE) >= max(.x, na.rm = TRUE)) {
     breaks[breaks == max(.x)] <- Inf
   } else if (open_upper) {
     breaks %<>% append(values = Inf)
@@ -61,7 +61,7 @@ fct_cut <- function(
 
   .x %>%
     as.numeric() %>%
-    cut(breaks = breaks, incl_lowest, right = FALSE, ordered_result = ordered) %>%
+    cut(breaks = breaks, right = FALSE, ordered_result = ordered) %>%
     forcats::fct_relabel(
       ~ .x %>%
         stringr::str_remove_all(stringr::coll("[")) %>%

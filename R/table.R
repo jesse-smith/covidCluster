@@ -1,11 +1,11 @@
 #' Create One-Way Table
 #'
-#' \code{create_table} summarizes a given variable in a one-way table with
+#' \code{construct_table} summarizes a given variable in a one-way table with
 #' percentages. It is mostly a wrapper around \code{\link[janitor]{tabyl}} that
 #' allows more flexibility in ordering the output table.
 #'
-#' By default, \code{create_table} will order factor inputs by their level and
-#' all other input by frequency. If \code{infreq == TRUE}; if
+#' By default, \code{construct_table} will order factor inputs by their level
+#' and all other input by frequency. If \code{infreq == TRUE}; if
 #' \code{infreq == FALSE}, it will order alpha-numerically. Note that the
 #' \code{.by} variable will be converted to a factor with levels ordered by the
 #' output table, regardless of input type or ordering.
@@ -23,6 +23,8 @@
 #' @param to_NA A character vector of values that should be considered missing
 #'
 #' @return A \code{\link[tibble]{tibble}} holding the summary table
+#'
+#' @keywords internal
 construct_table <- function(
   .data,
   .by,
@@ -136,6 +138,10 @@ create_table <- function(
     dplyr::select(...) ->
   selected_data
 
+  if (NCOL(selected_data) == 0) {
+    stop("There are no variables matching the input for `...`")
+  }
+
   # If `to` is not specified, use the longest common substring of the selected
   # column names. If there is none, use "value".
   if (rlang::is_empty(to)) {
@@ -144,6 +150,7 @@ create_table <- function(
       hutils::longest_prefix(warn_if_no_prefix = FALSE) %>%
       stringr::str_remove_all(pattern = "[^a-zA-Z0-9]*$") %>%
       janitor::make_clean_names()
+    print(prefix)
     to <- if (prefix == "") "value" else prefix
   }
 
