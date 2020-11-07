@@ -7,7 +7,7 @@
 load_integrated_data(
   date = Sys.Date(),
   directory = paste0("V:/EPI DATA ANALYTICS TEAM/COVID SANDBOX REDCAP DATA/",
-    "Integrated data tool Case Interviews/"),
+    "Integrated data tool Case Interviews/data/"),
   ext = "csv"
 )
 }

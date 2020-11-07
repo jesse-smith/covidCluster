@@ -8,7 +8,7 @@ download_integrated_data(
   date = Sys.Date(),
   api_token = Sys.getenv("redcap_IDT_token"),
   directory = paste0("V:/EPI DATA ANALYTICS TEAM/COVID SANDBOX REDCAP DATA/",
-    "Integrated data tool Case Interviews/"),
+    "Integrated data tool Case Interviews/data/"),
   new_file = paste0("integrated_data_", date, ".csv"),
   convert = FALSE,
   force = FALSE
