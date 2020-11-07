@@ -9,41 +9,51 @@ create_table(
   ...,
   to = NULL,
   infreq = NULL,
-  to_NA = c("unknown", "missing", "NA", "N/A", ""),
+  total_wide = TRUE,
+  to_na = c("unknown", "missing", "NA", "N/A", "<NA>", "^$"),
   show_missing_levels = FALSE
 )
 }
 \arguments{
-\item{.data}{A dataframe or tibble in tidy format}
+\item{.data}{A \link[base:data.frame]{data frame}, data frame
+extension (e.g. a \link[tibble:tbl_df]{tibble}), or a lazy data frame (e.g.
+from dbplyr or dtplyr)}
 
 \item{...}{The variable(s) in \code{.data} to analyze; can be specified as
-normal variables, strings, or using tidyselect helpers (such as
+normal (unquoted) variables, strings, or using tidyselect helpers (such as
 \code{\link[tidyselect]{starts_with}})}
 
 \item{to}{The name of the variable to "pivot" to; this defaults to the
-longest common starting string in the input variable names, or "value" if
+longest common prefix in the input variable names, or "value" if
 none exists}
 
 \item{infreq}{Should the output be ordered by frequency? The default depends
 on the input type; see details.}
 
-\item{to_NA}{A character vector of values that should be considered missing}
+\item{total_wide}{Should the total used for percentages come from the
+number of input observations (wide) or the number of pivoted observations
+(long)? This only matters when selecting multiple variables with \code{...}.}
+
+\item{to_na}{A character vector of values that should be considered missing,
+as regular expressions. Case is ignored.}
 
 \item{show_missing_levels}{Should all levels be shown, even if empty?}
 }
 \value{
-A \code{\link[janitor]{tabyl}} in \code{\link[tibble]{tibble}} format
+The output of \code{tabyl()}, modified as above and coerced to a tibble
 }
 \description{
-\code{create_table} summarizes a given variable in a one-way table with
+\code{create_table()} summarizes a given variable in a one-way table with
 percentages. It is mostly a wrapper around \code{\link[janitor]{tabyl}} that
 allows more flexibility in ordering the output table. It is designed to
-handle multiple variables at once using tidyselect helpers.
+handle multiple variables at once using tidyselect helpers and is able to
+define percentages based on total observations in wide (input) or long
+(pivoted) form.
 }
 \details{
-By default, \code{create_table} will order factor inputs by their level and
-all other input by frequency. If \code{infreq == TRUE}; if
-\code{infreq == FALSE}, it will order alpha-numerically. Note that the
-\code{.by} variable will be converted to a factor with levels ordered by the
-output table, regardless of input type or ordering.
+By default, \code{create_table()} will order factor inputs by their level and
+all other input by frequency. If \code{infreq = TRUE}, it will all input by
+frequency; if \code{infreq = FALSE}, it will order all input alpha-numerically.
+Note that the \code{.by} variable will be converted to a factor with levels
+ordered according to the output table, regardless of input type or ordering.
 }
