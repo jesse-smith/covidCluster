@@ -27,7 +27,8 @@ Imports:
     rlang (>= 0.4.8),
     stringr (>= 1.4.0),
     purrr (>= 0.3.4),
-    tidyr (>= 1.1.2)
+    tidyr (>= 1.1.2),
+    assertr (>= 2.7)
 Suggests: 
     covr,
     testthat,
