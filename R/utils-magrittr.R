@@ -13,3 +13,6 @@
 #'   mod is_in and or equals is_greater_than is_weakly_greater_than is_less_than
 #'   not set_colnames set_rownames set_names %>% %<>% %T>% %$%
 NULL
+
+# Suppress "no visible binding for global variable" when using `.`
+if (getRversion() >= "2.15.1") utils::globalVariables(".")
