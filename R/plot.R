@@ -52,7 +52,7 @@ plot_pie <- function(
   if (rlang::is_empty(.by)) {
     .by <- .table %>%
       colnames() %>%
-      .[[1]] %>%
+      extract2(1) %>%
       rlang::sym()
   } else {
     .by <- rlang::ensym(.by)
@@ -79,21 +79,23 @@ plot_pie <- function(
 
   # Calculate percentages
   .table %>%
-    dplyr::mutate(pct = n / sum(n, na.rm = TRUE)) ->
+    dplyr::mutate(
+      pct = .data[["n"]] / sum(.data[["n"]], na.rm = TRUE)
+    ) ->
     .table
 
   # Create plot
   plt <- ggplot2::ggplot(
     .table,
-    ggplot2::aes(x = 1, y = pct, fill = !!.by)
+    ggplot2::aes(x = 1, y = .data[["pct"]], fill = !!.by)
   ) +
     ggplot2::geom_col(width = 1, position = "fill") +
     ggtext::geom_richtext(
       ggplot2::aes(
-        y = cumsum(rev(pct)) - 0.5*rev(pct),
+        y = cumsum(rev(.data[["pct"]])) - 0.5*rev(.data[["pct"]]),
         label = paste0(
-          "**", rev(n), "** ",
-          "(", round(100*rev(pct)), "%)"
+          "**", rev(.data[["n"]]), "** ",
+          "(", round(100*rev(.data[["pct"]])), "%)"
         ),
         color = rev(!!.by),
       ),
@@ -207,7 +209,7 @@ plot_bar <- function(
   if (rlang::is_empty(.by)) {
     .by <- .table %>%
       colnames() %>%
-      .[[1]] %>%
+      extract2(1) %>%
       rlang::sym()
   } else {
     .by <- rlang::ensym(.by)
@@ -234,21 +236,21 @@ plot_bar <- function(
 
   # Calculate percentages
   .table %>%
-    dplyr::mutate(pct = n / sum(n, na.rm = TRUE)) ->
+    dplyr::mutate(pct = .data[["n"]] / sum(.data[["n"]], na.rm = TRUE)) ->
     .table
 
   # Create plot
   plt <- ggplot2::ggplot(
     .table,
-    ggplot2::aes(x = !!.by, y = n, fill = !!.by)
+    ggplot2::aes(x = !!.by, y = .data[["n"]], fill = !!.by)
   ) +
     ggplot2::geom_col(show.legend = legend) +
     ggtext::geom_textbox(
       ggplot2::aes(
-        y = n,
+        y = .data[["n"]],
         label = paste0(
-          "**", n, "** ",
-          "(", round(100*pct), "%)"
+          "**", .data[["n"]], "** ",
+          "(", round(100*.data[["pct"]]), "%)"
         ),
         color = !!.by,
       ),
