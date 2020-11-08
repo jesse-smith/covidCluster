@@ -252,12 +252,12 @@ plot_bar <- function(
           "**", .data[["n"]], "** ",
           "(", round(100*.data[["pct"]]), "%)"
         ),
-        color = !!.by,
       ),
       width = 0.9/15,
       vjust = 0,
       halign = 0.5,
       size = 14 * 0.35278,
+      color = "gray30",
       fill = background,
       show.legend = FALSE
     ) +
@@ -296,6 +296,7 @@ plot_bar <- function(
       plot.background = ggplot2::element_rect(color = NA, fill = background),
       line = ggplot2::element_blank(),
       axis.text = ggplot2::element_text(size = 16),
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1),
       axis.title.x = purrr::when(
         rlang::is_empty(x_lab) ~ ggplot2::element_blank(),
         ~ ggplot2::element_text(size = 18)
