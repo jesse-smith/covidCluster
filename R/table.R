@@ -186,17 +186,21 @@ create_table <- function(
 
   if (rlang::is_true(total_wide) & NCOL(selected_data) > 1) {
 
-    keep_n <- tabyl[[1]] %>%
+    is_missing <- tabyl[[1]] %>%
       as.character() %>%
-      stringr::str_detect(pattern = "^Missing$", negate = TRUE)
+      stringr::str_detect(pattern = "^Missing$")
 
     dplyr::mutate(
       tabyl,
-      n = c(.data[["n"]][keep_n], n_missing),
+      n = if (any(is_missing)) replace(n, which(is_missing), n_missing) else n,
       percent = .data[["n"]] / n_total,
       dplyr::across(
         dplyr::starts_with("valid_"),
-        ~ c(.data[["n"]][keep_n] / (n_total - n_missing), NA_real_)
+        ~ (.data[["n"]] / (n_total - n_missing)) %>%
+            purrr::when(
+              any(is_missing) ~ replace(., list = which(is_missing), NA_real_),
+              ~ .
+            )
       )
     )
   } else {
