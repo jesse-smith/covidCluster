@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-coviData.R
 \name{download_integrated_data}
 \alias{download_integrated_data}
-\title{Wrappers Around coviData Function}
+\title{Download Data from the Integrated Data Tool REDcap Project}
 \usage{
 download_integrated_data(
   date = Sys.Date(),
@@ -33,9 +33,28 @@ to \emph{.xlsx} format (or another file format)}
 \item{force}{A logical indicating whether to overwrite an existing file with
 the same date; the default is \code{FALSE} and should usually be left alone}
 }
+\value{
+Invisibly returns \code{NULL}
+}
 \description{
-\code{coviData} is the package for down/loading, munging, and performing
-basic analysis on COVID-19 data for Shelby County. It includes functionality
-for downloading data from the integrated data tool, which is re-exported in
-covidCluster.
+\code{download_integrated_data} connects to the Integrated Data Tool REDcap
+project via an API token and downloads the data currently available in the
+\strong{case interviews} report.
+}
+\details{
+\code{download_integrated_data} downloads data as above and saves to the file
+directory and file specified in \code{directory} and \code{new_file} (by
+default, it saves to directory
+\code{V:/EPI DATA ANALYTICS TEAM/COVID SANDBOX REDCAP DATA/Integrated data
+tool Case Interviews/} and file \code{integrated_data_YYYY-MM-DD.csv}.) Only
+change this if you're doing some custom analysis; by default,
+\code{\link[coviData]{load_integrated_data}} will look here for data to import.
+
+To use \code{download_integrated_data} you'll need an API access key for the
+associated REDcap project. Please contact
+\email{jesse.smith@shelbycountytn.gov} or
+\email{umar.kabir@shelbycountytn.gov} for more information.
+
+Best practice is to save this API access token in a separate file; see
+\link[coviData]{using_Renviron} for details.
 }

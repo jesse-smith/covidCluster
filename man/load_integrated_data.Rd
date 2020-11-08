@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-coviData.R
 \name{load_integrated_data}
 \alias{load_integrated_data}
-\title{Wrappers Around coviData Function}
+\title{Load Data from the Integrated Data Tool REDcap Project}
 \usage{
 load_integrated_data(
   date = Sys.Date(),
@@ -19,9 +19,12 @@ files containing \code{date}}
 
 \item{ext}{The file type to search for}
 }
+\value{
+A \code{link[tibble]{tibble}} containing the data from the specified
+file
+}
 \description{
-\code{coviData} is the package for down/loading, munging, and performing
-basic analysis on COVID-19 data for Shelby County. It includes functionality
-for loading data from the integrated data tool, which is re-exported in
-covidCluster.
+\code{load_integrated_data} loads data from the Integrated Data Tool REDcap
+project. It is designed to be used in conjuction with
+\link[coviData]{download_integrated_data}.
 }
