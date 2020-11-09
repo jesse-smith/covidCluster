@@ -14,7 +14,9 @@ plot_bar(
   legend = FALSE,
   legend_title = title,
   bottom_legend = TRUE,
-  palette = "blue",
+  palette = c("blue", "red", "pink", "purple", "deep-purple", "indigo", "light-blue",
+    "cyan", "teal", "green", "light-green", "lime", "yellow", "amber", "orange",
+    "deep-orange", "brown", "grey", "blue-grey"),
   background = "gray93"
 )
 }

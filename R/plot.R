@@ -39,10 +39,17 @@
 plot_pie <- function(
   .table,
   .by = NULL,
+  highlight = NULL,
   incl_missing = FALSE,
   title = NULL,
   legend_title = title,
-  palette = "blue",
+  palette = c(
+    "blue", "red", "pink", "purple", "deep-purple", "indigo", "light-blue",
+    "cyan", "teal", "green", "light-green", "lime", "yellow", "amber", "orange",
+    "deep-orange", "brown", "grey", "blue-grey"
+  ),
+  binary = FALSE,
+  legend = FALSE,
   bottom_legend = TRUE,
   background = "gray93",
   dodge = 0
@@ -65,36 +72,91 @@ plot_pie <- function(
       .table
   }
 
-  # Create color palette
-  pal <- ggsci::pal_material(
-    palette = palette,
-    n = NROW(.table) + 1,
-    reverse = TRUE
-  )
-
   # Set title to title-case `.by` if NULL
   if (rlang::is_empty(title)) {
     title <- rlang::as_name(.by) %>% janitor::make_clean_names(case = "title")
   }
 
-  # Calculate percentages
+  # Prep for plotting
   .table %>%
-    dplyr::mutate(
-      pct = .data[["n"]] / sum(.data[["n"]], na.rm = TRUE)
+    # Drop unnecessary variables
+    dplyr::transmute(
+      {{ .by  }},
+      n,
+      N,
+      # Force valid_percent
+      valid_percent = purrr::when(
+        "valid_percent" %in% colnames(.),
+        any(.) ~ valid_percent,
+        ~ percent
+      ),
+      # Force valid_N
+      valid_N = purrr::when(
+        "valid_N" %in% colnames(.),
+        any(.) ~ valid_N,
+        ~ N
+      ),
+      # Choose pct based on `incl_missing`
+      pct = purrr::when(
+        rlang::is_true(incl_missing),
+        . ~ percent,
+        ~ valid_percent
+      )
     ) ->
-    .table
+  .table
+
+  # Create color palettes
+  pal <- ggsci::pal_material(
+    palette = palette[[1]],
+    n = NROW(.table) + 1,
+    reverse = TRUE
+  )
+
+  gray_pal <- ggsci::pal_material(
+    palette = "grey",
+    n = NROW(.table) + 1,
+    reverse = TRUE
+  )
+
+  lvl_names <- .table %>% dplyr::pull({{ .by }}) %>% unique() %>% as.character()
+
+  if (rlang::is_empty(highlight)) {
+    color_scale <- pal(NROW(.table)) %>% set_names(lvl_names)
+  } else {
+    hlt    <- lvl_names[lvl_names %in% highlight]
+    no_hlt <- lvl_names[!lvl_names %in% highlight]
+
+    color_scale <- c(pal(NROW(hlt)), gray_pal(NROW(.table))[NROW(hlt):NROW(.table) + 1]) %>%
+      set_names(c(hlt, no_hlt)) %>%
+      extract(order(lvl_names))
+  }
+
+  # Create in-plot labels for legend = FALSE
+  by_label <- purrr::when(
+    rlang::is_true(legend),
+    . ~ NULL,
+    ~ .table %>% dplyr::pull({{ .by }}) %>% paste0("<br>")
+  )
 
   # Create plot
   plt <- ggplot2::ggplot(
     .table,
     ggplot2::aes(x = 1, y = .data[["pct"]], fill = !!.by)
   ) +
-    ggplot2::geom_col(width = 1, position = "fill") +
+    ggplot2::geom_col(
+      width = 1,
+      position = "fill",
+      alpha = 0.875,
+      show.legend = legend
+    ) +
     ggtext::geom_richtext(
       ggplot2::aes(
         y = cumsum(rev(.data[["pct"]])) - 0.5*rev(.data[["pct"]]),
         label = paste0(
-          "**", rev(.data[["n"]]), "** ",
+          "**",
+          rev(by_label),
+          rev(.data[["n"]]),
+          "** ",
           "(", round(100*rev(.data[["pct"]])), "%)"
         ),
         color = rev(!!.by),
@@ -104,39 +166,72 @@ plot_pie <- function(
       position = ggplot2::position_dodge2(width = dodge),
       show.legend = FALSE
     ) +
-    ggplot2::coord_polar("y", start = 0, direction = -1) +
+    ggplot2::coord_polar("y", start = 0, direction = 1) +
     ggplot2::scale_color_manual(
       name = legend_title,
-      values = pal(NROW(.table)),
+      values = color_scale,
       aesthetics = c("color", "fill")
     ) +
-    ggplot2::ggtitle(title) +
+    ggplot2::labs(
+      title    = title,
+      subtitle = paste0(
+        "Responded = ", .table[["valid_N"]][[1]]
+      ),
+      caption  = paste0(
+        "Did not respond = ", .table[["N"]][[1]] - .table[["valid_N"]][[1]]
+      )
+    ) +
     ggthemes::theme_fivethirtyeight() +
     ggplot2::theme(
-      plot.title = ggplot2::element_text(
-        size = 28,
-        face = "bold",
-        hjust = 0.5,
-        color = "gray30"
+      line                  = ggplot2::element_blank(),
+      axis.text             = ggplot2::element_blank(),
+      legend.background     = ggplot2::element_rect(
+        fill  = background,
+        color = NA
       ),
-      legend.title = ggplot2::element_text(
-        size = 18,
-        face = "bold",
-        color = "grey30"
+      legend.key            = ggplot2::element_rect(
+        fill  = background,
+        color = NA
       ),
-      legend.text = ggplot2::element_text(
-        size = 14,
-        color = "gray30"
+      legend.text           = ggplot2::element_text(
+        color = "gray30",
+        size  = 14
       ),
-      legend.background = ggplot2::element_rect(color = NA, fill = background),
-      legend.box.background = ggplot2::element_rect(color = NA, fill = background),
-      legend.key = ggplot2::element_rect(color = NA, fill = background),
-      panel.background = ggplot2::element_rect(color = NA, fill = background),
-      panel.border = ggplot2::element_blank(),
-      panel.grid.major = ggplot2::element_blank(),
-      plot.background = ggplot2::element_rect(color = NA, fill = background),
-      line = ggplot2::element_blank(),
-      axis.text = ggplot2::element_blank()
+      legend.title          = ggplot2::element_text(
+        face  = "bold",
+        color = "grey30",
+        size  = 18
+      ),
+      legend.box.background = ggplot2::element_rect(
+        fill  = background,
+        color = NA
+      ),
+      panel.background      = ggplot2::element_rect(
+        fill  = background,
+        color = NA
+      ),
+      panel.border          = ggplot2::element_blank(),
+      panel.grid.major      = ggplot2::element_blank(),
+      plot.background       = ggplot2::element_rect(
+        fill  = background,
+        color = NA
+      ),
+      plot.title            = ggplot2::element_text(
+        face  = "bold",
+        color = "gray30",
+        size  = 28,
+        hjust = 0.5
+      ),
+      plot.subtitle         = ggplot2::element_text(
+        face  = "bold",
+        size  = 18,
+        hjust = 0.5
+      ),
+      plot.caption          = ggplot2::element_text(
+        face  = "bold",
+        size  = 14,
+        hjust = 0.5
+      )
     )
 
   if (rlang::is_false(bottom_legend)) {
@@ -201,7 +296,217 @@ plot_bar <- function(
   legend = FALSE,
   legend_title = title,
   bottom_legend = TRUE,
-  palette = "blue",
+  palette = c(
+    "blue", "red", "pink", "purple", "deep-purple", "indigo", "light-blue",
+    "cyan", "teal", "green", "light-green", "lime", "yellow", "amber", "orange",
+    "deep-orange", "brown", "grey", "blue-grey"
+  ),
+  background = "gray93"
+) {
+
+  # Make sure `.by` is a symbol; defaults to the summarized variable
+  if (rlang::is_empty(.by)) {
+    .by <- .table %>%
+      colnames() %>%
+      extract2(1) %>%
+      rlang::sym()
+  } else {
+    .by <- rlang::ensym(.by)
+  }
+
+  # Remove missing data, if desired
+  if (rlang::is_false(incl_missing)) {
+    .table %>%
+      dplyr::filter(!!.by != "Missing") ->
+      .table
+  }
+
+  # Create color palette
+  pal <- ggsci::pal_material(
+    palette = palette,
+    n = 8,
+    reverse = TRUE
+  )(8)[[2]]
+
+  # Set title to title-case `.by` if NULL
+  if (rlang::is_empty(title)) {
+    title <- rlang::as_name(.by) %>% janitor::make_clean_names(case = "title")
+  }
+
+  # Prep for plotting
+  .table %>%
+    # Drop unnecessary variables
+    dplyr::transmute(
+      {{ .by  }},
+      n,
+      N,
+      # Force valid_N
+      valid_N = purrr::when(
+        "valid_N" %in% colnames(.),
+        any(.) ~ valid_N,
+        ~ N
+      ),
+      # Choose pct based on `incl_missing`
+      pct = purrr::when(
+        rlang::is_true(incl_missing),
+        . ~ percent,
+        ~ valid_percent
+      )
+    ) ->
+  .table
+
+  # Create plot
+  plt <- ggplot2::ggplot(
+    .table,
+    ggplot2::aes(x = !!.by, fill = !!.by)
+  ) +
+    # ggplot2::geom_hline(yintercept = .table[["N"]][[1]]) +
+    # ggplot2::geom_hline(yintercept = .table[["valid_N"]][[1]]) +
+    # ggplot2::geom_col(
+    #   ggplot2::aes(y = .data[["N"]]),
+    #   fill = NA,
+    #   color = pal(1)
+    # ) +
+    ggplot2::geom_col(
+      ggplot2::aes(y = .data[["valid_N"]]),
+      fill = "gray30",
+      color = pal,
+      alpha = 0.1
+    ) +
+    ggplot2::geom_col(
+      ggplot2::aes(y = .data[["n"]]),
+      show.legend = legend,
+      fill = pal,
+      alpha = 0.5
+    ) +
+    # ggplot2::annotate(
+    #   "label",
+    #   x = round(NROW(.table) / 2),
+    #   y = .table[["valid_N"]][[1]],
+    #   label = paste0(
+    #     "Responded = ", .table[["valid_N"]][[1]],
+    #     " (", round(100 * .table[["valid_N"]][[1]] / .table[["N"]][[1]]), "%)"
+    #   ),
+    #   size = 14 * 0.35278,
+    #   color = "gray30",
+    #   fill = background,
+    #   vjust = 0
+    # ) +
+    ggtext::geom_textbox(
+      ggplot2::aes(
+        y = .data[["n"]],
+        label = paste0(
+          "**", .data[["n"]], "** ",
+          "(", round(100*.data[["pct"]]), "%)"
+        )
+      ),
+      maxwidth = ggplot2::unit(0.9^2/NROW(.table), units = "npc"),
+      vjust = 0,
+      halign = 0.5,
+      size = 14 * 0.35278,
+      fill = background,
+      color = pal,
+      show.legend = FALSE
+    ) +
+    # ggplot2::scale_color_manual(
+    #   name = legend_title,
+    #   values = pal,
+    #   aesthetics = c("color", "fill")
+    # ) +
+    ggplot2::coord_cartesian(ylim = c(0, 1.1*.table[["valid_N"]][[1]])) +
+    ggplot2::labs(
+      title = title,
+      subtitle = paste0(
+        "Responded = ", .table[["valid_N"]][[1]]
+      ),
+      caption = paste0("Did not respond = ", .table[["N"]][[1]] - .table[["valid_N"]])
+    ) +
+    ggplot2::xlab(x_lab) +
+    ggplot2::ylab(y_lab) +
+    ggthemes::theme_fivethirtyeight(base_size = 14) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        size = 28,
+        face = "bold",
+        hjust = 0.5,
+        color = "gray30"
+      ),
+      legend.title = ggplot2::element_text(
+        size = 18,
+        face = "bold",
+        color = "grey30"
+      ),
+      legend.text = ggplot2::element_text(
+        size = 14,
+        color = "gray30"
+      ),
+      plot.subtitle = ggplot2::element_text(size = 18, hjust = 0.5, face = "bold"),
+      plot.caption = ggplot2::element_text(size = 14, face = "italic", hjust = 0.5),
+      legend.background = ggplot2::element_rect(color = NA, fill = background),
+      legend.box.background = ggplot2::element_rect(color = NA, fill = background),
+      legend.key = ggplot2::element_rect(color = NA, fill = background),
+      panel.background = ggplot2::element_rect(color = NA, fill = background),
+      panel.border = ggplot2::element_blank(),
+      panel.grid.major.x = ggplot2::element_blank(),
+      plot.background = ggplot2::element_rect(color = NA, fill = background),
+      line = ggplot2::element_blank(),
+      axis.text = ggplot2::element_text(size = 16),
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1),
+      axis.title.x = purrr::when(
+        rlang::is_empty(x_lab),
+        . ~ ggplot2::element_blank(),
+        ~ ggplot2::element_text(face = "bold", size = 18)
+      ),
+      axis.title.y = purrr::when(
+        rlang::is_empty(y_lab),
+        . ~ ggplot2::element_blank(),
+        ~ ggplot2::element_text(face = "bold", size = 18)
+      ),
+    )
+
+  # if (.table[["N"]][[1]] > .table[["valid_N"]][[1]]) {
+  #   plt <- plt + ggplot2::annotate(
+  #     "label",
+  #     x = round(NROW(.table) / 2),
+  #     y = .table[["N"]][[1]],
+  #     label = paste0(
+  #       "Total = ", .table[["N"]][[1]]
+  #     ),
+  #     size = 14 * 0.35278,
+  #     color = "gray30",
+  #     fill = background,
+  #     vjust = 0
+  #   )
+  # }
+
+  if (rlang::is_false(bottom_legend)) {
+    plt <- plt + ggplot2::theme(
+      legend.position = "right",
+      legend.direction = "vertical"
+    )
+  }
+
+
+  attr(plt, which = "background") <- background
+
+  plt
+}
+
+plot_hist <- function(
+  .table,
+  .by = NULL,
+  incl_missing = FALSE,
+  title = NULL,
+  x_lab = NULL,
+  y_lab = NULL,
+  legend = FALSE,
+  legend_title = title,
+  bottom_legend = TRUE,
+  palette = c(
+    "blue", "red", "pink", "purple", "deep-purple", "indigo", "light-blue",
+    "cyan", "teal", "green", "light-green", "lime", "yellow", "amber", "orange",
+    "deep-orange", "brown", "grey", "blue-grey"
+  ),
   background = "gray93"
 ) {
 
@@ -234,40 +539,70 @@ plot_bar <- function(
     title <- rlang::as_name(.by) %>% janitor::make_clean_names(case = "title")
   }
 
-  # Calculate percentages
+  # Prep for plotting
   .table %>%
-    dplyr::mutate(pct = .data[["n"]] / sum(.data[["n"]], na.rm = TRUE)) ->
+    # Drop unnecessary variables
+    dplyr::transmute(
+      {{ .by  }},
+      n,
+      N,
+      # Force valid_N
+      valid_N = purrr::when(
+        "valid_N" %in% colnames(.),
+        any(.) ~ valid_N,
+        ~ N
+      ),
+      # Choose pct based on `incl_missing`
+      pct = purrr::when(
+        rlang::is_true(incl_missing),
+        . ~ percent,
+        ~ valid_percent
+      )
+    ) ->
     .table
 
   # Create plot
   plt <- ggplot2::ggplot(
     .table,
-    ggplot2::aes(x = !!.by, y = .data[["n"]], fill = !!.by)
+    ggplot2::aes(x = !!.by, fill = !!.by)
   ) +
-    ggplot2::geom_col(show.legend = legend) +
-    ggtext::geom_textbox(
-      ggplot2::aes(
-        y = .data[["n"]],
-        label = paste0(
-          "**", .data[["n"]], "** ",
-          "(", round(100*.data[["pct"]]), "%)"
-        ),
+    ggplot2::geom_col(
+      ggplot2::aes(y = .data[["n"]]),
+      show.legend = legend,
+      color = pal(1),
+      fill = pal(NROW(.table)) %>% rev(),
+      width = 1,
+      alpha = 0.5
+    ) +
+  ggtext::geom_textbox(
+    ggplot2::aes(
+      y = .data[["n"]],
+      label = paste0(
+        "**", .data[["n"]], "** ",
+        "(", round(100*.data[["pct"]]), "%)"
+      )
+    ),
+    maxwidth = ggplot2::unit(0.9^2/NROW(.table), units = "npc"),
+    vjust = 0,
+    halign = 0.5,
+    size = 14 * 0.35278,
+    fill = background,
+    color = pal(1),
+    show.legend = FALSE
+  ) +
+    # ggplot2::scale_color_manual(
+    #   name = legend_title,
+    #   values = pal(NROW(.table)),
+    #   aesthetics = c("color", "fill")
+    # ) +
+    ggplot2::coord_cartesian(ylim = c(0, 1.1*max(.table[["n"]], na.rm = TRUE))) +
+    ggplot2::labs(
+      title = title,
+      subtitle = paste0(
+        "Responded = ", .table[["valid_N"]][[1]]
       ),
-      width = 0.9/15,
-      vjust = 0,
-      halign = 0.5,
-      size = 14 * 0.35278,
-      color = "gray30",
-      fill = background,
-      show.legend = FALSE
+      caption = paste0("\nDid not respond = ", .table[["N"]][[1]] - .table[["valid_N"]])
     ) +
-    ggplot2::scale_color_manual(
-      name = legend_title,
-      values = pal(NROW(.table)),
-      aesthetics = c("color", "fill")
-    ) +
-    ggplot2::coord_cartesian(ylim = c(0, 1.1*max(.table[["n"]]))) +
-    ggplot2::ggtitle(title) +
     ggplot2::xlab(x_lab) +
     ggplot2::ylab(y_lab) +
     ggthemes::theme_fivethirtyeight(base_size = 14) +
@@ -287,6 +622,8 @@ plot_bar <- function(
         size = 14,
         color = "gray30"
       ),
+      plot.subtitle = ggplot2::element_text(size = 18, hjust = 0.5, face = "bold"),
+      plot.caption = ggplot2::element_text(size = 14, face = "italic", hjust = 0.5),
       legend.background = ggplot2::element_rect(color = NA, fill = background),
       legend.box.background = ggplot2::element_rect(color = NA, fill = background),
       legend.key = ggplot2::element_rect(color = NA, fill = background),
@@ -299,13 +636,28 @@ plot_bar <- function(
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1),
       axis.title.x = purrr::when(
         rlang::is_empty(x_lab) ~ ggplot2::element_blank(),
-        ~ ggplot2::element_text(size = 18)
+        ~ ggplot2::element_text(face = "bold", size = 18)
       ),
       axis.title.y = purrr::when(
         rlang::is_empty(y_lab) ~ ggplot2::element_blank(),
-        ~ ggplot2::element_text(size = 18)
+        ~ ggplot2::element_text(face = "bold", size = 18)
       ),
     )
+
+  # if (.table[["N"]][[1]] > .table[["valid_N"]][[1]]) {
+  #   plt <- plt + ggplot2::annotate(
+  #     "label",
+  #     x = round(NROW(.table) / 2),
+  #     y = .table[["N"]][[1]],
+  #     label = paste0(
+  #       "Total = ", .table[["N"]][[1]]
+  #     ),
+  #     size = 14 * 0.35278,
+  #     color = "gray30",
+  #     fill = background,
+  #     vjust = 0
+  #   )
+  # }
 
   if (rlang::is_false(bottom_legend)) {
     plt <- plt + ggplot2::theme(
@@ -313,6 +665,7 @@ plot_bar <- function(
       legend.direction = "vertical"
     )
   }
+
 
   attr(plt, which = "background") <- background
 

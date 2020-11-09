@@ -10,7 +10,10 @@ plot_pie(
   incl_missing = FALSE,
   title = NULL,
   legend_title = title,
-  palette = "blue",
+  palette = c("blue", "red", "pink", "purple", "deep-purple", "indigo", "light-blue",
+    "cyan", "teal", "green", "light-green", "lime", "yellow", "amber", "orange",
+    "deep-orange", "brown", "grey", "blue-grey"),
+  legend = FALSE,
   bottom_legend = TRUE,
   background = "gray93",
   dodge = 0

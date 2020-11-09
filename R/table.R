@@ -41,32 +41,54 @@ construct_table <- function(
   # Make sure `.by` is a symbol
   .by <- rlang::enquo(.by)
 
-  # By default, `infreq` should be FALSE if `.by` is a factor and TRUE otherwise
+  # Create predicate function for date type
+  is_dt_dttm <- purrr::as_mapper(
+    ~ lubridate::is.Date(.x) | lubridate::is.POSIXt(.x)
+  )
+
+  # By default, `infreq` should be FALSE if `.by` has inherent ordering or TRUE
+  # otherwise
   if (rlang::is_empty(infreq)) {
-    infreq <- .data %>% dplyr::pull({{ .by }}) %>% purrr::negate(is.factor)()
+    infreq <- .data %>%
+      dplyr::pull({{ .by }}) %>%
+      purrr::negate(~ is.numeric(.x) | is_dt_dttm(.x) | is.ordered(.x))()
   }
 
   # Create one-way table of `.by` variable
   .data %>%
     # Coerce `.by` to an appropriately ordered factor
-    dplyr::mutate(
-      {{ .by }} := purrr::when(
-        {{ .by }},
-        # If `infreq` == TRUE, order by frequency of levels
-        infreq ~ factor(.) %>% forcats::fct_infreq(ordered = TRUE),
-        # Else if `.by` is already a factor, keep its ordering but ensure
-        # `ordered` is true
-        is.factor(.) ~ as.ordered(.),
-        # Else coerce to factor with alphanumeric ordering
-        ~ factor(.)
-      )
+    dplyr::transmute(
+      {{ .by }} := {{ .by }} %>%
+        purrr::when(
+          # If `infreq` == TRUE, order by frequency of levels
+          infreq ~ factor(.) %>% forcats::fct_infreq(),
+          # If `.by` is already a factor, it's fine as-is
+          is.factor(.) ~ .,
+          # If `.by` is a date, coerce to ordered factor
+          lubridate::is.Date(.) ~ factor(., ordered = TRUE),
+          # Same if `.by` is datetime, but coerce to date first
+          lubridate::is.POSIXt(.) ~ lubridate::as_datetime(.) %>% factor(ordered = TRUE),
+          # If `.by` is other numeric, coerce to ordered in sequence
+          is.numeric(.) ~ factor(.) %>% forcats::fct_inseq(ordered = TRUE),
+          # Else coerce to factor with alphabetical ordering
+          ~ factor(.)
+        )
     ) %>%
     janitor::tabyl({{ .by }}) %>%
     dplyr::as_tibble() %>%
     dplyr::arrange({{ .by }}) %>%
-    # Change `NA` to "Missing"
+    # Change `NA` to "Missing", add N and valid_N
     dplyr::mutate(
-      {{ .by }} := forcats::fct_explicit_na({{ .by }}, na_level = "Missing")
+      {{ .by }} := forcats::fct_explicit_na({{ .by }}, na_level = "Missing"),
+      n = as.integer(.data[["n"]]),
+      N = sum(.data[["n"]]),
+      valid_N = purrr::when(
+        "valid_percent" %in% colnames(.),
+        any(.) ~ .data[["n"]] %>%
+          extract(!is.na(.data[["valid_percent"]])) %>%
+          sum(),
+        ~ NULL
+      )
     )
 }
 
@@ -118,6 +140,9 @@ create_table <- function(
   show_missing_levels = FALSE
 ) {
 
+  # Predicate for character or factor
+  is_characterish <- purrr::as_mapper(~ purrr::is_character(.x) | is.factor(.x))
+
   # .data must be a data frame, so make sure it is
   # Selecting variables of interest is needed for multiple steps
   .data %>%
@@ -136,18 +161,32 @@ create_table <- function(
     # Convert `to_na` values to NA and drop other variables
     dplyr::mutate(
       dplyr::across(
+        where(purrr::is_character),
         .fns = ~ .x %>%
-          as.character() %>%
           stringr::str_replace_all(
             pattern = to_na %>%
               stringr::str_flatten(collapse = "|") %>%
               stringr::regex(ignore_case = TRUE),
             replacement = NA_character_
           )
+      ),
+      dplyr::across(
+        where(is.factor),
+        .fns = ~ .x %>%
+          forcats::fct_relabel(
+            ~ .x %>%
+              stringr::str_replace_all(
+                pattern = to_na %>%
+                  stringr::str_flatten(collapse = "|") %>%
+                  stringr::regex(ignore_case = TRUE),
+                replacement = NA_character_
+              )
+          )
       )
     ) ->
   selected_data
 
+  # Store missing and total info for adjusting percentages
   if (rlang::is_true(total_wide) & NCOL(selected_data) > 1) {
     n_total <- NROW(selected_data)
     n_missing <- selected_data %>%
@@ -184,6 +223,7 @@ create_table <- function(
     ) ->
   tabyl
 
+  # Adjust percentages and totals
   if (rlang::is_true(total_wide) & NCOL(selected_data) > 1) {
 
     is_missing <- tabyl[[1]] %>%
@@ -192,15 +232,25 @@ create_table <- function(
 
     dplyr::mutate(
       tabyl,
+      # Replace missing `n` with `n_missing` from above
       n = if (any(is_missing)) replace(n, which(is_missing), n_missing) else n,
+      # Re-calculate percent
       percent = .data[["n"]] / n_total,
-      dplyr::across(
-        dplyr::starts_with("valid_"),
-        ~ (.data[["n"]] / (n_total - n_missing)) %>%
-            purrr::when(
-              any(is_missing) ~ replace(., list = which(is_missing), NA_real_),
-              ~ .
-            )
+      # Replace `N`
+      N = n_total,
+      # Re-calculate valid_percent
+      valid_percent = purrr::when(
+        "valid_percent" %in% colnames(tabyl),
+        rlang::is_true(.) ~ (.data[["n"]] / (n_total - n_missing)) %>%
+          replace(list = which(is_missing), values = NA_real_),
+        ~ NULL
+      ),
+      # Re-calculate valid_N
+      valid_N = purrr::when(
+        "valid_N" %in% colnames(tabyl),
+        rlang::is_true(.) ~ rep(n_total - n_missing, times = NROW(tabyl)) %>%
+          replace(list = which(is_missing), values = NA_real_),
+        ~ NULL
       )
     )
   } else {
