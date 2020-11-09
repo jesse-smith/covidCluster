@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Wrappers Around coviData Function — load_integrated_data • covidCluster</title>
+<title>Load Data from the Integrated Data Tool REDcap Project — load_integrated_data • covidCluster</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,11 +46,10 @@
 
 
 
-<meta property="og:title" content="Wrappers Around coviData Function — load_integrated_data" />
-<meta property="og:description" content="coviData is the package for down/loading, munging, and performing
-basic analysis on COVID-19 data for Shelby County. It includes functionality
-for loading data from the integrated data tool, which is re-exported in
-covidCluster." />
+<meta property="og:title" content="Load Data from the Integrated Data Tool REDcap Project — load_integrated_data" />
+<meta property="og:description" content="load_integrated_data loads data from the Integrated Data Tool REDcap
+project. It is designed to be used in conjuction with
+download_integrated_data." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -100,7 +99,12 @@ covidCluster." />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/jesse-smith/covidCluster">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -114,16 +118,15 @@ covidCluster." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Wrappers Around coviData Function</h1>
+    <h1>Load Data from the Integrated Data Tool REDcap Project</h1>
     
     <div class="hidden name"><code>load_integrated_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p><code>coviData</code> is the package for down/loading, munging, and performing
-basic analysis on COVID-19 data for Shelby County. It includes functionality
-for loading data from the integrated data tool, which is re-exported in
-covidCluster.</p>
+    <p><code>load_integrated_data</code> loads data from the Integrated Data Tool REDcap
+project. It is designed to be used in conjuction with
+<a href='https://rdrr.io/pkg/coviData/man/download_integrated_data.html'>download_integrated_data</a>.</p>
     </div>
 
     <pre class="usage"><span class='fu'>load_integrated_data</span><span class='op'>(</span>
@@ -151,6 +154,10 @@ files containing <code>date</code></p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A <code>link[tibble]{tibble}</code> containing the data from the specified
+file</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

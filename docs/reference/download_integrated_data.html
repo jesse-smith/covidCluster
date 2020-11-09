@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Wrappers Around coviData Function — download_integrated_data • covidCluster</title>
+<title>Download Data from the Integrated Data Tool REDcap Project — download_integrated_data • covidCluster</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,11 +46,10 @@
 
 
 
-<meta property="og:title" content="Wrappers Around coviData Function — download_integrated_data" />
-<meta property="og:description" content="coviData is the package for down/loading, munging, and performing
-basic analysis on COVID-19 data for Shelby County. It includes functionality
-for downloading data from the integrated data tool, which is re-exported in
-covidCluster." />
+<meta property="og:title" content="Download Data from the Integrated Data Tool REDcap Project — download_integrated_data" />
+<meta property="og:description" content="download_integrated_data connects to the Integrated Data Tool REDcap
+project via an API token and downloads the data currently available in the
+case interviews report." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -100,7 +99,12 @@ covidCluster." />
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/jesse-smith/covidCluster">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -114,16 +118,15 @@ covidCluster." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Wrappers Around coviData Function</h1>
+    <h1>Download Data from the Integrated Data Tool REDcap Project</h1>
     
     <div class="hidden name"><code>download_integrated_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p><code>coviData</code> is the package for down/loading, munging, and performing
-basic analysis on COVID-19 data for Shelby County. It includes functionality
-for downloading data from the integrated data tool, which is re-exported in
-covidCluster.</p>
+    <p><code>download_integrated_data</code> connects to the Integrated Data Tool REDcap
+project via an API token and downloads the data currently available in the
+<strong>case interviews</strong> report.</p>
     </div>
 
     <pre class="usage"><span class='fu'>download_integrated_data</span><span class='op'>(</span>
@@ -171,6 +174,24 @@ the same date; the default is <code>FALSE</code> and should usually be left alon
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>Invisibly returns <code>NULL</code></p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p><code>download_integrated_data</code> downloads data as above and saves to the file
+directory and file specified in <code>directory</code> and <code>new_file</code> (by
+default, it saves to directory
+<code>V:/EPI DATA ANALYTICS TEAM/COVID SANDBOX REDCAP DATA/Integrated data
+tool Case Interviews/</code> and file <code>integrated_data_YYYY-MM-DD.csv</code>.) Only
+change this if you're doing some custom analysis; by default,
+<code><a href='https://rdrr.io/pkg/coviData/man/load_integrated_data.html'>load_integrated_data</a></code> will look here for data to import.</p>
+<p>To use <code>download_integrated_data</code> you'll need an API access key for the
+associated REDcap project. Please contact
+<a href='mailto:jesse.smith@shelbycountytn.gov'>jesse.smith@shelbycountytn.gov</a> or
+<a href='mailto:umar.kabir@shelbycountytn.gov'>umar.kabir@shelbycountytn.gov</a> for more information.</p>
+<p>Best practice is to save this API access token in a separate file; see
+<a href='https://rdrr.io/pkg/coviData/man/using_Renviron.html'>using_Renviron</a> for details.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
