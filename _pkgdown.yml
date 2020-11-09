@@ -1,3 +1,7 @@
 template:
   params:
     bootswatch: paper
+navbar:
+  right:
+  - icon: fa-github fa-lg
+    href: https://github.com/jesse-smith/covidCluster
