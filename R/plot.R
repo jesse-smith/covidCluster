@@ -492,6 +492,7 @@ plot_bar <- function(
   plt
 }
 
+#' @export
 plot_hist <- function(
   .table,
   .by = NULL,
