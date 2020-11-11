@@ -7,6 +7,7 @@
 plot_bar(
   .table,
   .by = NULL,
+  highlight = NULL,
   incl_missing = FALSE,
   title = NULL,
   x_lab = NULL,

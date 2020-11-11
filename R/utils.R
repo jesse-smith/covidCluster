@@ -68,7 +68,7 @@ fct_cut <- function(
         stringr::str_remove_all(stringr::coll("]")) %>%
         stringr::str_remove_all("[()]") %>%
         stringr::str_replace_all(pattern = "-Inf,", replacement = "<") %>%
-        stringr::str_replace_all(pattern = ",Inf", replacement = "+") %>%
+        stringr::str_replace_all(pattern = ",.*Inf", replacement = "+") %>%
         stringr::str_replace_all(pattern = ",", replacement = "-")
     )
 }

@@ -368,6 +368,12 @@ plot_bar <- function(
       {{ .by  }},
       n,
       N,
+      # Force valid_percent
+      valid_percent = purrr::when(
+        "valid_percent" %in% colnames(.),
+        any(.) ~ valid_percent,
+        ~ percent
+      ),
       # Force valid_N
       valid_N = purrr::when(
         "valid_N" %in% colnames(.),
@@ -521,7 +527,7 @@ plot_hist <- function(
 
   # Create color palette
   pal <- ggsci::pal_material(
-    palette = palette,
+    palette = palette[[1]],
     n = NROW(.table) + 1,
     reverse = TRUE
   )
@@ -538,6 +544,12 @@ plot_hist <- function(
       {{ .by  }},
       n,
       N,
+      # Force valid_percent
+      valid_percent = purrr::when(
+        "valid_percent" %in% colnames(.),
+        any(.) ~ valid_percent,
+        ~ percent
+      ),
       # Force valid_N
       valid_N = purrr::when(
         "valid_N" %in% colnames(.),
