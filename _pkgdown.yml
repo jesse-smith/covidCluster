@@ -1,7 +1,17 @@
 template:
   params:
     bootswatch: paper
-navbar:
-  right:
-  - icon: fa-github fa-lg
-    href: https://github.com/jesse-smith/covidCluster
+url: https://jesse-smith.github.io/covidCluster/
+reference:
+- title: "Create Summary Tables"
+- contents:
+  - create_table
+- title: "Plot Summary Tables"
+- contents:
+  - plot_bar
+  - plot_pie
+- title: "Helper Functions"
+- contents:
+  - fct_cut
+development:
+  mode: unreleased
