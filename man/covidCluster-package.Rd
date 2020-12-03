@@ -13,6 +13,14 @@ covidCluster is designed to detect clusters of
     the whereabouts of interviewed cases and identifying links between
     those cases.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://jesse-smith.github.io/covidCluster/}
+  \item \url{https://github.com/jesse-smith/covidCluster}
+}
+
+}
 \author{
 \strong{Maintainer}: Jesse Smith \email{jesse.smith@shelbycountytn.gov} (\href{https://orcid.org/0000-0001-7375-2463}{ORCID})
 

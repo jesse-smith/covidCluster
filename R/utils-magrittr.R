@@ -8,11 +8,13 @@
 #' @md
 #' @name magrittr_utils
 #' @keywords internal
-#' @importFrom magrittr extract extract2 inset inset2 use_series add subtract
-#'   multiply_by raise_to_power multiply_by_matrix divide_by divide_by_int
-#'   mod is_in and or equals is_greater_than is_weakly_greater_than is_less_than
-#'   not set_colnames set_rownames set_names %>% %<>% %T>% %$%
+#' @import magrittr
 NULL
+
+#' @importFrom magrittr %>%
+#'
+#' @export
+magrittr::`%>%`
 
 # Suppress "no visible binding for global variable" when using `.`
 if (getRversion() >= "2.15.1") utils::globalVariables(".")

@@ -1,7 +1,5 @@
 #' Automated Cluster Detection in Shelby County Health Department Data
 #'
-#' @importFrom stats quantile
-#'
 #' @keywords internal
 #' @docType package
 "_PACKAGE"

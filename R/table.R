@@ -233,7 +233,11 @@ create_table <- function(
     dplyr::mutate(
       tabyl,
       # Replace missing `n` with `n_missing` from above
-      n = if (any(is_missing)) replace(n, which(is_missing), n_missing) else n,
+      n = purrr::when(
+        any(is_missing),
+        . ~ replace(.data[["n"]], which(is_missing), n_missing),
+        ~ .data[["n"]]
+      ),
       # Re-calculate percent
       percent = .data[["n"]] / n_total,
       # Replace `N`
