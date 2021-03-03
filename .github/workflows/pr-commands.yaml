@@ -16,7 +16,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: r-lib/actions/setup-r@v1
       - name: Install dependencies
-        run: Rscript -e 'install.packages(c("remotes", "roxygen2"))' -e 'remotes::install_deps(dependencies = TRUE)'
+        run: Rscript -e 'install.packages(c("remotes", "roxygen2"), type = "binary")' -e 'remotes::install_deps(dependencies = TRUE, type = "binary")'
       - name: Document
         run: Rscript -e 'roxygen2::roxygenise()'
       - name: commit
@@ -41,7 +41,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: r-lib/actions/setup-r@v1
       - name: Install dependencies
-        run: Rscript -e 'install.packages("styler")'
+        run: Rscript -e 'install.packages("styler", type = "binary")'
       - name: Style
         run: Rscript -e 'styler::style_pkg()'
       - name: commit
